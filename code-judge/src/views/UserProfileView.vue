@@ -133,7 +133,15 @@ function cancelEditing() {
 function handleAvatarChange(event: Event) {
   const input = event.target as HTMLInputElement
   if (input.files && input.files.length > 0) {
-    form.avatarFile = input.files[0]
+    const file = input.files[0]
+    // 检查文件大小，限制为2MB
+    const maxSize = 2 * 1024 * 1024 // 2MB
+    if (file.size > maxSize) {
+      errorMessage.value = '文件大小超过限制，请上传不超过2MB的图片'
+      return
+    }
+    
+    form.avatarFile = file
     // 创建本地预览URL
     const reader = new FileReader()
     reader.onload = (e) => {

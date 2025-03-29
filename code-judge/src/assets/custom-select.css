@@ -1,0 +1,96 @@
+/* 自定义下拉菜单样式 */
+.custom-select {
+  position: relative;
+  width: 100%;
+  cursor: pointer;
+  user-select: none;
+}
+
+.custom-select .selected-option {
+  padding: 8px 12px 8px 30px;
+  border: none;
+  border-radius: 6px;
+  background-color: #f5f7fa;
+  transition: all 0.2s;
+  position: relative;
+}
+
+.custom-select .selected-option:hover {
+  background-color: #edf2f7;
+}
+
+.custom-select .options-container {
+  position: absolute;
+  top: 100%;
+  left: 0;
+  width: 100%;
+  min-width: 160px;
+  max-height: 200px;
+  overflow-y: auto;
+  background-color: white;
+  border: none;
+  border-radius: 6px;
+  margin-top: 4px;
+  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.08);
+  z-index: 10;
+  display: flex;
+  flex-direction: column;
+}
+
+.custom-select .option {
+  padding: 8px 12px 8px 30px;
+  transition: background-color 0.2s;
+  order: 10; /* 默认顺序值 */
+  width: 100%;
+  white-space: nowrap;
+}
+
+/* 语言选择下拉框选项顺序控制 - 使用更兼容的选择器 */
+.custom-select.language-select .options-container {
+  display: flex;
+  flex-direction: column;
+}
+
+/* 使用特定类名来标识不同语言选项 */
+.custom-select.language-select .options-container .option i.fas.fa-file-code ~ span {
+  order: 1; /* C++ */
+}
+
+.custom-select.language-select .options-container .option i.fas.fa-code ~ span {
+  order: 2; /* C */
+}
+
+.custom-select.language-select .options-container .option i.fab.fa-java ~ span {
+  order: 3; /* Java */
+}
+
+.custom-select.language-select .options-container .option i.fab.fa-python ~ span {
+  order: 4; /* Python */
+}
+
+.custom-select.language-select .options-container .option i.fab.fa-js-square ~ span {
+  order: 5; /* JavaScript */
+}
+
+.custom-select .option:hover {
+  background-color: #f3f4f6;
+}
+
+.custom-select .option.selected {
+  background-color: #f0f7ff;
+  font-weight: 500;
+}
+
+/* 确保所有选项宽度一致 */
+.custom-select.language-select .options-container .option {
+  width: 100%;
+  min-width: 160px;
+  box-sizing: border-box;
+}
+
+/* 确保图标正确显示 */
+.custom-select i {
+  font-size: 16px;
+  width: 16px;
+  text-align: center;
+}

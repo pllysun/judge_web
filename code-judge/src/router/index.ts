@@ -9,10 +9,30 @@ import LeaderboardView from '../views/LeaderboardView.vue'
 import UserProfileView from '../views/UserProfileView.vue'
 import AdminView from '../views/AdminView.vue'
 import ChangePasswordView from '../views/ChangePasswordView.vue'
+import CreateProblemView from '../views/CreateProblemView.vue'
+import CodeEditorView from '../views/CodeEditorView.vue'
+import SubmissionDetailView from '../views/SubmissionDetailView.vue'
 
 const router = createRouter({
   history: createWebHistory(import.meta.env.BASE_URL),
   routes: [
+    {
+      path: '/submissions/:id',
+      name: 'submission-detail',
+      component: SubmissionDetailView,
+      meta: { requiresAuth: true },
+    },
+    {
+      path: '/problems/:id/solve',
+      name: 'code-editor',
+      component: CodeEditorView,
+    },
+    {
+      path: '/create-problem',
+      name: 'create-problem',
+      component: CreateProblemView,
+      meta: { requiresAuth: true },
+    },
     {
       path: '/',
       name: 'home',

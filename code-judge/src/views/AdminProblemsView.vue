@@ -1,5 +1,8 @@
 <script setup lang="ts">
 import { ref, onMounted, computed } from 'vue'
+import { useRouter } from 'vue-router'
+
+const router = useRouter()
 
 // 题目列表数据
 const problems = ref([
@@ -71,7 +74,8 @@ function deleteProblem(problemId: number) {
 // 创建题目
 function createProblem() {
   console.log('创建题目')
-  // 实际项目中这里应该跳转到创建题目页或打开创建题目弹窗
+  // 使用Vue Router跳转到创建题目页面
+  router.push('/create-problem')
 }
 
 

@@ -1,8 +1,9 @@
 <script setup lang="ts">
 import { RouterLink, useRouter } from 'vue-router'
 import { useAuthStore } from '../stores/auth'
-import { ref, onMounted, onUnmounted } from 'vue'
+import { ref, onMounted, onUnmounted, defineExpose } from 'vue'
 import { authApi } from '../services/api'
+import { notificationService } from '../services/notificationService'
 
 const router = useRouter()
 
@@ -10,6 +11,7 @@ const authStore = useAuthStore()
 const showDropdown = ref(false)
 const dropdownRef = ref(null)
 const buttonRef = ref(null)
+const unreadNotificationsCount = ref(0)
 
 function toggleDropdown() {
   showDropdown.value = !showDropdown.value
@@ -24,12 +26,41 @@ function handleClickOutside(event) {
   }
 }
 
+// 获取未读通知数量
+async function fetchUnreadNotificationsCount() {
+  if (authStore.isLoggedIn) {
+    try {
+      const result = await notificationService.getNotifications(0, 1)
+      unreadNotificationsCount.value = result.unreadCount
+    } catch (error) {
+      console.error('获取未读通知数量失败:', error)
+    }
+  }
+}
+
+// 更新未读通知数量 - 供外部组件调用
+async function updateUnreadCount(count?: number) {
+  if (count !== undefined) {
+    // 如果提供了具体数量，直接更新
+    unreadNotificationsCount.value = count
+  } else {
+    // 否则重新获取
+    await fetchUnreadNotificationsCount()
+  }
+}
+
 onMounted(() => {
   document.addEventListener('click', handleClickOutside, true)
+  fetchUnreadNotificationsCount()
 })
 
 onUnmounted(() => {
   document.removeEventListener('click', handleClickOutside, true)
+})
+
+// 暴露方法给父组件
+defineExpose({
+  updateUnreadCount
 })
 
 async function handleLogout() {
@@ -110,7 +141,7 @@ async function handleLogout() {
               <i class="fas fa-bell text-lg"></i>
               <!-- 未读通知标记 -->
               <span
-                v-if="false"
+                v-if="unreadNotificationsCount > 0"
                 class="absolute top-0 right-0 block h-2 w-2 rounded-full bg-red-500 ring-2 ring-white"
               ></span>
             </RouterLink>

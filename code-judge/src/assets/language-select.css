@@ -1,0 +1,50 @@
+/* 语言选择器下拉菜单样式 */
+
+/* 修改select元素的样式，使其支持自定义下拉菜单 */
+select.language-select option {
+  padding-left: 30px;
+  position: relative;
+  background-repeat: no-repeat;
+  background-position: 6px center;
+  background-size: 16px 16px;
+}
+
+/* 为每种语言添加图标 - 使用伪元素 */
+select.language-select option[data-icon]::before {
+  font-family: "Font Awesome 5 Free", "Font Awesome 5 Brands";
+  margin-right: 8px;
+  display: inline-block;
+  width: 16px;
+  font-weight: 900; /* 确保图标正确显示 */
+}
+
+/* 为每种语言添加特定图标 */
+select.language-select option[data-icon="fab fa-js-square"]::before {
+  content: "\f3b9";
+  color: #f7df1e;
+}
+
+select.language-select option[data-icon="fab fa-python"]::before {
+  content: "\f3e2";
+  color: #3776ab;
+}
+
+select.language-select option[data-icon="fab fa-java"]::before {
+  content: "\f4e4";
+  color: #007396;
+}
+
+select.language-select option[data-icon="fas fa-file-code"]::before {
+  content: "\f1c9";
+  color: #6295cb;
+}
+
+select.language-select option[data-icon="fas fa-code"]::before {
+  content: "\f121";
+  color: #555555;
+}
+
+/* 自定义下拉菜单样式 */
+.language-select {
+  padding-left: 30px !important;
+}

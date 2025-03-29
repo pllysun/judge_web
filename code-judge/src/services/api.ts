@@ -1,7 +1,7 @@
 // API服务
 
 // 基础URL配置
-const API_BASE_URL = 'http://127.0.0.1:8080/api'
+const API_BASE_URL = 'http://pllysun.top:7500/api'
 
 // 获取认证头部
 export function getAuthHeader() {

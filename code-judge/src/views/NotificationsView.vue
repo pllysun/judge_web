@@ -1,15 +1,16 @@
 <script setup lang="ts">
 import { ref, onMounted, computed } from 'vue'
 import NavBar from '../components/NavBar.vue'
+import NotificationDetailModal from '../components/NotificationDetailModal.vue'
 import { useAuthStore } from '../stores/auth'
-import { getAuthHeader } from '../services/api'
+import { notificationService, NotificationResponse } from '../services/notificationService'
 
 // 定义通知类型
 interface Notification {
   id: number
   title: string
   content: string
-  type: 'info' | 'success' | 'warning' | 'error'
+  type: string
   isRead: boolean
   createTime: string
 }
@@ -18,70 +19,57 @@ const authStore = useAuthStore()
 const notifications = ref<Notification[]>([])
 const loading = ref(false)
 const errorMessage = ref('')
+const unreadCount = ref(0)
+const page = ref(0)
+const size = ref(10)
+const totalNotifications = ref(0)
 
-// 模拟获取通知数据
+// 导航栏组件引用
+const navBarRef = ref(null)
+
+// 详情弹窗相关
+const showDetailModal = ref(false)
+const selectedNotification = ref<Notification | null>(null)
+
+// 获取通知数据
 async function fetchNotifications() {
   loading.value = true
   errorMessage.value = ''
 
   try {
-    // 这里应该是实际的API调用，目前使用模拟数据
-    // const response = await fetch('API_URL/notifications', {
-    //   headers: getAuthHeader()
-    // })
-    // const data = await response.json()
-    // notifications.value = data
-
-    // 模拟数据
-    setTimeout(() => {
-      notifications.value = [
-        {
-          id: 1,
-          title: '系统更新通知',
-          content: '系统将于2023年12月15日进行维护升级，届时平台将暂停服务2小时。',
-          type: 'info',
-          isRead: false,
-          createTime: '2023-12-10 10:00:00',
-        },
-        {
-          id: 2,
-          title: '新比赛开始',
-          content: '"算法挑战赛2023"已经开始，欢迎参加！',
-          type: 'success',
-          isRead: false,
-          createTime: '2023-12-08 14:30:00',
-        },
-        {
-          id: 3,
-          title: '账号安全提醒',
-          content: '我们检测到您的账号在新设备上登录，如非本人操作，请立即修改密码。',
-          type: 'warning',
-          isRead: true,
-          createTime: '2023-12-05 18:45:00',
-        },
-        {
-          id: 4,
-          title: '提交结果通知',
-          content: '您提交的题目"动态规划基础"已通过所有测试用例！',
-          type: 'success',
-          isRead: true,
-          createTime: '2023-12-01 09:15:00',
-        },
-        {
-          id: 5,
-          title: '评论回复',
-          content: '用户"CodeMaster"回复了您在"贪心算法"讨论中的评论。',
-          type: 'info',
-          isRead: true,
-          createTime: '2023-11-28 16:20:00',
-        },
-      ]
-      loading.value = false
-    }, 800)
+    const result = await notificationService.getNotifications(page.value, size.value)
+    
+    // 将API返回的通知数据转换为组件使用的格式
+    notifications.value = result.notifications.map(notification => ({
+      id: notification.id,
+      title: notification.title,
+      content: notification.content,
+      type: getNotificationType(notification.type),
+      isRead: notification.read,
+      createTime: notification.createdAt
+    }))
+    
+    totalNotifications.value = result.total
+    unreadCount.value = result.unreadCount
+    loading.value = false
   } catch (error) {
     console.error('获取通知失败:', error)
     errorMessage.value = '获取通知列表失败，请稍后再试'
     loading.value = false
+  }
+}
+
+// 根据通知类型返回对应的UI类型
+function getNotificationType(type: string): string {
+  switch (type) {
+    case 'SYSTEM_UPDATE':
+      return 'info'
+    case 'COMPETITION_START':
+      return 'success'
+    case 'ANNOUNCEMENT':
+      return 'warning'
+    default:
+      return 'info'
   }
 }
 
@@ -90,47 +78,60 @@ async function markAsRead(notification: Notification) {
   if (notification.isRead) return
 
   try {
-    // 这里应该是实际的API调用
-    // await fetch(`API_URL/notifications/${notification.id}/read`, {
-    //   method: 'POST',
-    //   headers: getAuthHeader()
-    // })
-
-    // 模拟API调用成功
+    await notificationService.markAsRead(notification.id)
     notification.isRead = true
+    unreadCount.value--
+    
+    // 更新导航栏中的未读通知计数
+    if (navBarRef.value) {
+      navBarRef.value.updateUnreadCount(unreadCount.value)
+    }
   } catch (error) {
     console.error('标记通知已读失败:', error)
+  }
+}
+
+// 查看通知详情
+async function viewNotificationDetail(notification: Notification) {
+  selectedNotification.value = notification
+  showDetailModal.value = true
+  
+  // 如果通知未读，则标记为已读
+  if (!notification.isRead) {
+    await markAsRead(notification)
   }
 }
 
 // 标记所有通知为已读
 async function markAllAsRead() {
   try {
-    // 这里应该是实际的API调用
-    // await fetch('API_URL/notifications/read-all', {
-    //   method: 'POST',
-    //   headers: getAuthHeader()
-    // })
-
-    // 模拟API调用成功
+    await notificationService.markAllAsRead()
+    
+    // 更新本地通知状态
     notifications.value.forEach((notification) => {
       notification.isRead = true
     })
+    unreadCount.value = 0
+    
+    // 更新导航栏中的未读通知计数
+    if (navBarRef.value) {
+      navBarRef.value.updateUnreadCount(0)
+    }
   } catch (error) {
     console.error('标记所有通知已读失败:', error)
   }
 }
 
-// 删除通知
+// 删除通知（仅删除当前用户的通知状态，不删除通知本身）
 async function deleteNotification(id: number) {
   try {
-    // 这里应该是实际的API调用
-    // await fetch(`API_URL/notifications/${id}`, {
-    //   method: 'DELETE',
-    //   headers: getAuthHeader()
-    // })
-
-    // 模拟API调用成功
+    await notificationService.deleteUserNotification(id)
+    
+    // 从列表中移除已删除的通知
+    const deletedNotification = notifications.value.find(item => item.id === id)
+    if (deletedNotification && !deletedNotification.isRead) {
+      unreadCount.value--
+    }
     notifications.value = notifications.value.filter((item) => item.id !== id)
   } catch (error) {
     console.error('删除通知失败:', error)
@@ -170,8 +171,8 @@ function formatTime(timeString: string): string {
   return `${year}-${month}-${day}`
 }
 
-// 获取未读通知数量
-const unreadCount = computed(() => {
+// 计算当前页面上的未读通知数量
+const pageUnreadCount = computed(() => {
   return notifications.value.filter((item) => !item.isRead).length
 })
 
@@ -182,7 +183,7 @@ onMounted(() => {
 
 <template>
   <div class="min-h-screen bg-gray-50">
-    <NavBar />
+    <NavBar ref="navBarRef" />
 
     <div class="py-10">
       <header>
@@ -229,74 +230,85 @@ onMounted(() => {
           </div>
 
           <!-- 通知列表 -->
-          <div v-else class="bg-white shadow overflow-hidden sm:rounded-md mt-4">
-            <ul class="divide-y divide-gray-200">
+          <div v-else class="max-w-7xl mx-auto mt-6">
+            <ul class="space-y-3">
               <li v-for="notification in notifications" :key="notification.id" class="relative">
                 <div
-                  class="px-4 py-5 sm:px-6 hover:bg-gray-50 transition-colors duration-150 ease-in-out"
-                  :class="{ 'bg-blue-50 hover:bg-blue-50': !notification.isRead }"
-                  @click="markAsRead(notification)"
+                  class="bg-white rounded-lg shadow-sm hover:shadow-md border border-gray-100 transition-all duration-200 ease-in-out overflow-hidden cursor-pointer group"
+                  :class="{ 
+                    'border-l-4 border-l-blue-500 bg-blue-50/50': !notification.isRead,
+                    'hover:border-l-blue-300': notification.isRead 
+                  }"
+                  @click="viewNotificationDetail(notification)"
                 >
-                  <!-- 未读标记 -->
-                  <div
-                    v-if="!notification.isRead"
-                    class="absolute left-0 top-0 bottom-0 w-1 bg-blue-500"
-                  ></div>
-
-                  <div class="flex justify-between items-start">
-                    <div class="flex-1 min-w-0">
-                      <div class="flex items-center">
-                        <!-- 通知类型图标 -->
-                        <div class="flex-shrink-0 mr-3">
-                          <div
-                            class="h-10 w-10 rounded-full flex items-center justify-center"
-                            :class="{
-                              'bg-blue-100 text-blue-600': notification.type === 'info',
-                              'bg-green-100 text-green-600': notification.type === 'success',
-                              'bg-yellow-100 text-yellow-600': notification.type === 'warning',
-                              'bg-red-100 text-red-600': notification.type === 'error',
-                            }"
-                          >
-                            <i
-                              class="text-lg"
+                  <div class="px-5 py-5 sm:px-6">
+                    <div class="flex justify-between items-start">
+                      <div class="flex-1 min-w-0">
+                        <div class="flex items-start">
+                          <!-- 通知类型图标 -->
+                          <div class="flex-shrink-0 mr-4">
+                            <div
+                              class="h-12 w-12 rounded-full flex items-center justify-center shadow-sm transform transition-transform group-hover:scale-110"
                               :class="{
-                                'fas fa-info': notification.type === 'info',
-                                'fas fa-check-circle': notification.type === 'success',
-                                'fas fa-exclamation-triangle': notification.type === 'warning',
-                                'fas fa-times-circle': notification.type === 'error',
+                                'bg-blue-100 text-blue-600': notification.type === 'info',
+                                'bg-green-100 text-green-600': notification.type === 'success',
+                                'bg-yellow-100 text-yellow-600': notification.type === 'warning',
+                                'bg-red-100 text-red-600': notification.type === 'error',
                               }"
-                            ></i>
+                            >
+                              <i
+                                class="text-xl"
+                                :class="{
+                                  'fas fa-info': notification.type === 'info',
+                                  'fas fa-check-circle': notification.type === 'success',
+                                  'fas fa-exclamation-triangle': notification.type === 'warning',
+                                  'fas fa-times-circle': notification.type === 'error',
+                                }"
+                              ></i>
+                            </div>
+                          </div>
+
+                          <!-- 通知内容 -->
+                          <div class="pt-1">
+                            <div class="flex items-center">
+                              <h3
+                                class="text-base font-medium truncate max-w-md"
+                                :class="
+                                  notification.isRead ? 'text-gray-700' : 'text-gray-900 font-semibold'
+                                "
+                              >
+                                {{ notification.title }}
+                              </h3>
+                              <!-- 未读标记 -->
+                              <span 
+                                v-if="!notification.isRead" 
+                                class="ml-2 inline-flex items-center px-2 py-0.5 rounded text-xs font-medium bg-blue-100 text-blue-800"
+                              >
+                                未读
+                              </span>
+                            </div>
+                            <p class="mt-2 text-sm text-gray-600 line-clamp-2 pr-4 leading-relaxed">
+                              {{ notification.content }}
+                            </p>
+                            <div class="mt-3 flex items-center text-xs text-gray-500">
+                              <span class="inline-flex items-center">
+                                <i class="fas fa-clock mr-1 opacity-75"></i>
+                                {{ formatTime(notification.createTime) }}
+                              </span>
+                            </div>
                           </div>
                         </div>
-
-                        <!-- 通知内容 -->
-                        <div>
-                          <h3
-                            class="text-sm font-medium"
-                            :class="
-                              notification.isRead ? 'text-gray-700' : 'text-gray-900 font-semibold'
-                            "
-                          >
-                            {{ notification.title }}
-                          </h3>
-                          <p class="mt-1 text-sm text-gray-600 line-clamp-2">
-                            {{ notification.content }}
-                          </p>
-                          <p class="mt-1 text-xs text-gray-400">
-                            {{ formatTime(notification.createTime) }}
-                          </p>
-                        </div>
                       </div>
-                    </div>
 
-                    <!-- 操作按钮 -->
-                    <div class="ml-4 flex-shrink-0 flex">
-                      <button
-                        @click.stop="deleteNotification(notification.id)"
-                        class="text-gray-400 hover:text-gray-500 focus:outline-none"
-                      >
-                        <i class="fas fa-trash-alt"></i>
-                      </button>
+                      <!-- 操作按钮 -->
+                      <div class="ml-4 flex-shrink-0 flex opacity-70 hover:opacity-100 transition-opacity">
+                        <button
+                          @click.stop="deleteNotification(notification.id)"
+                          class="p-2 text-gray-500 hover:text-red-500 hover:bg-red-50 rounded-full focus:outline-none transition-colors duration-200"
+                        >
+                          <i class="fas fa-trash-alt"></i>
+                        </button>
+                      </div>
                     </div>
                   </div>
                 </div>
@@ -307,12 +319,19 @@ onMounted(() => {
       </main>
     </div>
   </div>
+  
+  <!-- 通知详情弹窗 -->
+  <NotificationDetailModal
+    v-model:visible="showDetailModal"
+    :notification="selectedNotification"
+    @close="showDetailModal = false"
+  />
 </template>
 
 <style scoped>
 .line-clamp-2 {
   display: -webkit-box;
-  -webkit-line-clamp: 2;
+  -webkit-line-clamp: 3;
   -webkit-box-orient: vertical;
   overflow: hidden;
 }
