@@ -1,0 +1,32 @@
+/* 下拉菜单样式修复 - 确保下拉菜单能够突破弹窗限制 */
+
+/* 增加下拉菜单的z-index，确保它显示在弹窗之上 */
+.dropdown-menu-fix {
+  position: absolute !important;
+  z-index: 2100 !important; /* 高于弹窗的z-index */
+  max-height: 300px !important;
+  overflow-y: auto !important;
+  box-shadow:
+    0 4px 6px -1px rgba(0, 0, 0, 0.1),
+    0 2px 4px -1px rgba(0, 0, 0, 0.06) !important;
+  width: 100% !important;
+  top: 100% !important;
+  left: 0 !important;
+  margin-top: 4px !important;
+}
+
+/* 确保下拉菜单在弹窗中正确显示 */
+.dropdown-container {
+  position: relative !important;
+}
+
+/* 修复Element Plus弹窗中的下拉菜单 */
+html body .el-overlay-dialog .el-select__popper,
+html body .el-overlay-dialog .el-dropdown-menu {
+  z-index: 2100 !important;
+}
+
+/* 确保下拉菜单不会被截断 */
+html body .el-overlay {
+  overflow: visible !important;
+}

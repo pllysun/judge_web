@@ -1,0 +1,28 @@
+/* 语言选择下拉框选项顺序控制 */
+
+/* 为每种语言设置特定的顺序 */
+.custom-select.language-select .options-container {
+  display: flex;
+  flex-direction: column;
+}
+
+/* 使用语言值作为选择器 */
+.custom-select.language-select .options-container .option[data-lang="cpp"] {
+  order: 1; /* C++ */
+}
+
+.custom-select.language-select .options-container .option[data-lang="c"] {
+  order: 2; /* C */
+}
+
+.custom-select.language-select .options-container .option[data-lang="java"] {
+  order: 3; /* Java */
+}
+
+.custom-select.language-select .options-container .option[data-lang="python"] {
+  order: 4; /* Python */
+}
+
+.custom-select.language-select .options-container .option[data-lang="javascript"] {
+  order: 5; /* JavaScript */
+}

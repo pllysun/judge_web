@@ -1,0 +1,59 @@
+/* 弹窗样式修复 - 最高优先级 */
+
+/* 使用最高优先级选择器覆盖弹窗宽度 */
+html body .el-message-box,
+html body .el-message-box.el-message-box--center,
+html body .el-overlay .el-message-box,
+html body .el-overlay-dialog .el-message-box,
+html body .el-message-box__wrapper .el-message-box,
+html body .el-message-box__wrapper .el-message-box.user-detail-popup {
+  width: 600px !important;
+  max-width: 95vw !important;
+}
+
+/* 确保弹窗容器正确居中，并且位置适当下移 */
+html body .el-message-box__wrapper {
+  display: flex !important;
+  justify-content: center !important;
+  align-items: flex-start !important;
+  padding-top: 15vh !important;
+  width: 100% !important;
+}
+
+/* 确保弹窗内容可滚动 */
+html body .el-message-box__content,
+html body .el-message-box.user-detail-popup .el-message-box__content {
+  max-height: 85vh !important;
+  overflow-y: auto !important;
+}
+
+/* 用户详情弹窗特定样式 */
+html body .el-message-box.user-detail-popup .user-detail-content {
+  max-height: 85vh !important;
+  overflow-y: auto !important;
+}
+
+/* 修复MessageBox取消错误 - 处理取消按钮事件 */
+html body .el-message-box__btns .el-button {
+  margin-left: 10px !important;
+  padding: 8px 20px !important;
+}
+
+/* 确保弹窗按钮正确显示 */
+html body .el-message-box__btns {
+  display: flex !important;
+  justify-content: flex-end !important;
+  padding-top: 10px !important;
+}
+
+/* 修复MessageBox取消按钮点击事件 */
+html body .el-overlay-dialog {
+  position: fixed !important;
+  top: 0 !important;
+  right: 0 !important;
+  bottom: 0 !important;
+  left: 0 !important;
+  overflow: auto !important;
+  margin: 0 !important;
+  z-index: 2000 !important;
+}
